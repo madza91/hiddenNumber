@@ -30,13 +30,12 @@ $isGameStarted = ($gameID && $_SESSION['game_status'] == 0) ? true : false;
 if ($isGameStarted) {
     $template = new Template('in_game');
 } else {
-    $template = new Template('new_game');
-
-    $template->score = $gameCore->getScore();
-    $template->username = (isset($_SESSION['username'])) ? $_SESSION['username']: '';
-
+    $template              = new Template('new_game');
+    $template->score       = $gameCore->getScore();
+    $template->username    = (isset($_SESSION['username'])) ? $_SESSION['username']: '';
     $template->totalPlayed = $gameCore->totalPlayed();
-
 }
+
 $template->title = $config['title'];
+
 echo $template;
