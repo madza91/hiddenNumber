@@ -1,17 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Nemanja
- * Date: 5.3.2017
- * Time: 14:11
- */
-
 
 session_start();
 
 require_once('core/config.php');
 include('helpers/system_helper.php');
-
 
 global $config;
 
@@ -36,7 +28,6 @@ define ('SITE_TEMPLATE_DIR', $site_template_dir);
 define ('ACTUAL_LINK', $actual_link);
 define ('DEV_MODE', false);
 define ('SITE_TITLE', $config['title']);
-
 
 /*
  * Include helper functions

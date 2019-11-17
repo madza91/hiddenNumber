@@ -1,16 +1,16 @@
 <?php
+
 /**
- * Created by PhpStorm.
- * User: Nemanja
- * Date: 5.3.2017
- * Time: 13:50
+ * Class GameCore
  */
-
-
-
 class GameCore
 {
+    const STATUS_IN_PROGRESS = 0;
+    const STATUS_COMPLETED = 1;
+    const STATUS_CLOSED = 2;
 
+    /** @var Database */
+    protected $db;
 
     /**
      * GameCore constructor.
@@ -20,43 +20,35 @@ class GameCore
         $this->db = new Database();
     }
 
-    public function newGame($username)
+    /**
+     * @param string $username
+     *
+     * @return bool
+     */
+    public function newGame(string $username): bool
     {
-
         $secretNumber = rand(-10000, 10000);
 
         $this->db->query('INSERT INTO games (username, secret_number, guess_total)
                             VALUES (:username, :secret_number, 0)');
         $this->db->bind(':username', $username);
         $this->db->bind(':secret_number', $secretNumber);
-
         $this->db->execute();
 
-        $lastId = $this->db->lastInsertId();
-
-
-
-        $_SESSION['username']   = $username;
-        $_SESSION['game_id']    = $lastId;
-
-        // Status: 0 - In progress, 1 - Completed, 2 - Closed
-        $_SESSION['game_status'] = 0;
+        $_SESSION['username']    = $username;
+        $_SESSION['game_id']     = $this->db->lastInsertId();
+        $_SESSION['game_status'] = self::STATUS_IN_PROGRESS;
 
         return true;
     }
 
-
     /**
-     * @param $game_id
+     * @param int $game_id
      */
-    public function gameClose($game_id)
+    public function gameClose(int $game_id): void
     {
-
-        $gameStatusClosed = 2;
-
-        $this->setStatus($game_id, $gameStatusClosed);
-
-        $_SESSION['game_status'] = $gameStatusClosed;
+        $this->setStatus($game_id, self::STATUS_CLOSED);
+        $_SESSION['game_status'] = self::STATUS_CLOSED;
 
         $gameInfo = $this->getInfo($game_id);
 
@@ -64,105 +56,91 @@ class GameCore
         redirect('');
     }
 
-
     /**
-     * @param $chosen_number
-     * @param $game_id
+     * @param int $chosen_number
+     * @param int $game_id
      */
-    public function gameTry($chosen_number, $game_id)
+    public function gameTry(int $chosen_number, int $game_id): void
     {
-
-
         $this->increaseTry($game_id);
 
         $gameInfo = $this->getInfo($game_id);
 
         $secretNumber = $gameInfo->secret_number;
-        $guess_total = $gameInfo->guess_total;
-
+        $guess_total  = $gameInfo->guess_total;
 
         if ($chosen_number == $secretNumber) {
+            $this->setStatus($_SESSION['game_id'], self::STATUS_COMPLETED);
 
-            $this->setStatus($_SESSION['game_id']);
-
-            $_SESSION['message'] = "Well done! You have successfully guessed secret number in {$guess_total} times!";
-            $_SESSION['game_status'] = 1;
+            $_SESSION['message']     = "Well done! You have successfully guessed secret number in {$guess_total} times!";
+            $_SESSION['game_status'] = self::STATUS_COMPLETED;
         } elseif ($chosen_number > $secretNumber) {
             $_SESSION['message'] = "Your number is bigger than ours. Try number: {$guess_total}";
         } elseif ($chosen_number < $secretNumber) {
             $_SESSION['message'] = "Your number is smaller than ours. Try number: {$guess_total}";
         }
-
     }
 
-
     /**
-     * @param $game_id
-     * @return mixed
+     * @param int $game_id
+     *
+     * @return stdClass|null
      */
-    public function getInfo($game_id)
+    public function getInfo(int $game_id): ?stdClass
     {
-
         $this->db->query('SELECT * FROM games WHERE id = :game_id');
         $this->db->bind(':game_id', $game_id);
 
         return $this->db->single();
     }
 
-
     /**
-     * @param $game_id
+     * @param int $game_id
      * @param int $status
+     *
      * @return bool
      */
-    public function setStatus($game_id, $status = 1)
+    public function setStatus(int $game_id, int $status): bool
     {
-
         $this->db->query('UPDATE games SET status = :status WHERE id = :game_id LIMIT 1');
         $this->db->bind(':status', $status);
         $this->db->bind(':game_id', $game_id);
-        $this->db->execute();
 
-        return true;
+        return $this->db->execute();
     }
 
-
     /**
-     * @param $game_id
+     * @param int $game_id
+     *
      * @return bool
      */
-    public function increaseTry($game_id)
+    public function increaseTry(int $game_id): bool
     {
-
         $this->db->query('UPDATE games SET guess_total = guess_total + 1 WHERE id = :game_id LIMIT 1');
         $this->db->bind(':game_id', $game_id);
-        $this->db->execute();
 
-        return true;
+        return $this->db->execute();
     }
 
-
     /**
-     * @return mixed
+     * @return array
      */
-    public function getScore()
+    public function getScore(): array
     {
-
         $this->db->query('SELECT * FROM games WHERE status = 1 ORDER BY guess_total ASC, created_at DESC');
         $results = $this->db->resultset();
 
         return $results;
     }
 
-
-    public function totalPlayed()
+    /**
+     * @return int
+     */
+    public function totalPlayed(): int
     {
-
         $this->db->query('SELECT COUNT(*) AS total FROM games');
         $result = $this->db->single();
 
         return $result->total;
-
     }
-
 }

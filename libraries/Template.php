@@ -5,36 +5,55 @@
  */
 class Template
 {
-    //Path to template
+    /** @var string */
     protected $template;
 
-    //Variables passed in
+    /** @var string */
+    protected $template_dir;
+
+    /** @var string */
+    protected $base_dir;
+
+    /** @var bool|TRUE */
+    protected $header;
+
+    /** @var bool|TRUE */
+    protected $menu;
+
+    /** @var string */
+    protected $title;
+
+    /** @var bool|TRUE */
+    protected $footer;
+
+    /**
+     * Variables passed in
+     * @var array
+     */
     protected $vars = [];
 
     /**
      * Template constructor.
      *
-     * @param $template
+     * @param string    $template
      * @param bool|TRUE $header
      * @param bool|TRUE $menu
      * @param bool|TRUE $footer
      */
-    public function __construct($template, $header = true, $menu = true, $footer = true)
+    public function __construct(string $template, bool $header = true, bool $menu = true, bool $footer = true)
     {
-
         // Check for extension
         if(substr($template, -4) !== '.php') {
             $template .= '.php';
         }
 
-        $this->template = BASE_DIR . 'templates/' . SITE_TEMPLATE . '/' . $template;
+        $this->template     = BASE_DIR . 'templates/' . SITE_TEMPLATE . '/' . $template;
         $this->template_dir = BASE_DIR . 'templates/' . SITE_TEMPLATE . '/';
-        $this->base_dir = BASE_DIR;
-        $this->header   = $header;
-        $this->menu     = $menu;
-        $this->footer   = $footer;
-        $this->title    = 'Warning: Title is not set!';
-
+        $this->base_dir     = BASE_DIR;
+        $this->header       = $header;
+        $this->menu         = $menu;
+        $this->footer       = $footer;
+        $this->title        = 'Warning: Title is not set!';
     }
 
     /**
@@ -74,16 +93,14 @@ class Template
         }
 
         // If TRUE, include menu
-        if($this->menu) {
+        if ($this->menu) {
             include($this->template_dir . 'includes/menu.php');
         }
 
         // Include view source if exists, otherwise 404.php
-        if(file_exists($this->template)){
+        if (file_exists($this->template)) {
             include($this->template);
-
         } else {
-
             // View doesn't exists
             $tmpPageName = basename($this->template);
             $template = new Template('404.php', false, false, false);
@@ -94,7 +111,7 @@ class Template
         }
 
         // If TRUE, include footer
-        if($this->footer) {
+        if ($this->footer) {
             include($this->template_dir . 'includes/footer.php');
         }
 

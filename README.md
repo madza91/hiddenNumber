@@ -2,7 +2,8 @@
 Small game, guess the number and get in hi-score list
 
 ## Installation
-Just clone it, and run project root folder.
+- Clone it
+- Change config to your needs (db credentials)
 
 ## Requirements
 * PHP
